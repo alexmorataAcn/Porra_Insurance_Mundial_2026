@@ -1,0 +1,18 @@
+# Datos privados de participantes
+ZIPs/
+
+# Excel y scripts internos
+*.xlsx
+*.py
+*.pyc
+__pycache__/
+
+# Archivos internos / exploración
+CLAUDE.md
+excel_referencia.md
+opciones_diseño.html
+eliminatorias_v*.html
+clasificacion.json
+
+# Resultados (privados)
+resultados.json
