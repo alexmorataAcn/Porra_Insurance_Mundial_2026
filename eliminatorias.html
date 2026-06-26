@@ -40,12 +40,6 @@ header.hero h1 .y{color:var(--acn)}
 .save-pill{font-size:10px;color:var(--muted2);display:flex;align-items:center;gap:4px;margin-top:4px}
 .save-pill.ok{color:var(--win)}
 
-/* TABS */
-.tabs-bar{display:flex;gap:6px;margin-bottom:12px}
-.tab-btn{flex:1;padding:10px 14px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);font-family:"Sora";font-weight:700;font-size:13px;border-radius:var(--rad-s);cursor:pointer;transition:.14s;text-align:center}
-.tab-btn.act{background:var(--acn);border-color:var(--acn);color:#fff}
-.tab-btn:hover:not(.act){border-color:var(--info);color:var(--ink)}
-
 /* STICKY COUNTER */
 .sticky-bar{position:sticky;top:8px;z-index:20;display:flex;gap:8px;margin-bottom:12px;backdrop-filter:blur(8px)}
 .st-stat{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(16,26,44,.92);border:1px solid var(--line2);border-radius:var(--rad-s);padding:10px 14px}
@@ -118,20 +112,6 @@ header.hero h1 .y{color:var(--acn)}
 .btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--muted);font-size:12px;padding:8px 14px}
 .btn.ghost:hover{border-color:var(--hot);color:var(--hot)}
 
-/* CLASIFICACIÓN */
-.clas-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-.clas-table th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);font-weight:700;border-bottom:1px solid var(--line)}
-.clas-table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
-.clas-table tr:last-child td{border-bottom:0}
-.clas-table tr:hover td{background:rgba(255,255,255,.025)}
-.clas-pos{font-family:"Anton";font-size:16px;width:32px;text-align:center}
-.clas-pos.p1{color:var(--gold)}.clas-pos.p2{color:#c0c8d8}.clas-pos.p3{color:#b07060}
-.clas-pts{font-family:"Anton";font-size:18px;color:var(--lime);text-align:right}
-.clas-name{font-weight:700}
-.clas-sub{font-size:11px;color:var(--muted2);margin-top:1px}
-.clas-num{text-align:right;color:var(--muted);font-size:12px}
-.loading-msg{text-align:center;color:var(--muted);padding:40px 0;font-size:13px;line-height:1.7}
-
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#07101e;font-weight:700;font-size:13px;padding:11px 18px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.25s;z-index:90}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .foot{color:var(--muted2);font-size:11px;text-align:center;margin-top:22px;line-height:1.6}
@@ -150,12 +130,7 @@ header.hero h1 .y{color:var(--acn)}
     <div class="save-pill" id="savePill">💾 Progreso guardado automáticamente en tu navegador</div>
   </header>
 
-  <div class="tabs-bar">
-    <button class="tab-btn act" id="tab-cuadro-btn" onclick="showTab('cuadro')">⚽ Cuadro</button>
-    <button class="tab-btn" id="tab-clas-btn" onclick="showTab('clasificacion')">🏆 Clasificación</button>
-  </div>
-
-  <!-- ═══ TAB: CUADRO ═══ -->
+  <!-- ═══ CUADRO ═══ -->
   <div id="tab-cuadro">
     <div class="note">
       📊 <b>Partido:</b> signo acertado = 3 pts · resultado exacto = 6 pts.<br>
@@ -183,11 +158,6 @@ header.hero h1 .y{color:var(--acn)}
       </div>
       <div class="note warn" id="dl-warn" style="margin-top:10px">Completa nombre, apellido y elige ganador en todos los partidos.</div>
     </div>
-  </div>
-
-  <!-- ═══ TAB: CLASIFICACIÓN ═══ -->
-  <div id="tab-clasificacion" style="display:none">
-    <div id="clas-content"><div class="loading-msg">Cargando clasificación…</div></div>
   </div>
 
   <div class="foot">Fase eliminatoria · Porra Mundial 2026 · ACN Insurance.</div>
@@ -578,13 +548,17 @@ function buildData(){
   ALL_MATCHES.forEach(m=>{
     const sc=S[m.mid];if(!sc||!sc.gan)return;
     const t=matchTeams(m);
-    const wCode=sc.gan==="local"?t.localCode:t.visitCode;if(!wCode)return;
+    const wCode=sc.gan==="local"?t.localCode:t.visitCode;
+    const lCode=sc.gan==="local"?t.visitCode:t.localCode;
     const r=rondaOf(m.mid);
     const RORD=["r32","r16","qf","sf","3rd","fin","campeon"];
-    const nr=r==="r32"?"r16":r==="r16"?"qf":r==="qf"?"sf":null;
-    if(nr&&(!prog[wCode]||RORD.indexOf(nr)>RORD.indexOf(prog[wCode])))prog[wCode]=nr;
-    if(r==="fin")prog[wCode]="campeon";
-    if(r==="3rd")prog[wCode]="3rd";
+    const bump=(code,lvl)=>{if(code&&(!prog[code]||RORD.indexOf(lvl)>RORD.indexOf(prog[code])))prog[code]=lvl;};
+    if(r==="r32")bump(wCode,"r16");
+    else if(r==="r16")bump(wCode,"qf");
+    else if(r==="qf")bump(wCode,"sf");
+    else if(r==="sf")bump(wCode,"fin");       // ganador de semi llega a la final → +45
+    else if(r==="3rd")bump(wCode,"3rd");      // ganador del 3er puesto → +45
+    else if(r==="fin"){bump(lCode,"fin");bump(wCode,"campeon");}  // finalista pierde → +45; gana → +90
   });
   return{v:2,type:"mundial-2026-elim",name:(nombre+" "+apellido).trim(),nombre,apellido,
          fecha:new Date().toISOString(),partidos,progresoEquipos:prog};
@@ -610,46 +584,6 @@ function summaryHTML(d){
     +body+'<p style="color:#99a;font-size:12px;margin-top:20px">Generado el '+new Date().toLocaleString()+'</p></body>';
 }
 
-/* ─── tabs ─── */
-function showTab(name){
-  document.getElementById("tab-cuadro").style.display=name==="cuadro"?"":"none";
-  document.getElementById("tab-clasificacion").style.display=name==="clasificacion"?"":"none";
-  document.getElementById("tab-cuadro-btn").className="tab-btn"+(name==="cuadro"?" act":"");
-  document.getElementById("tab-clas-btn").className="tab-btn"+(name==="clasificacion"?" act":"");
-  if(name==="clasificacion")loadClasificacion();
-}
-
-/* ─── clasificación ─── */
-let clasLoaded=false;
-function loadClasificacion(){
-  if(clasLoaded)return;clasLoaded=true;
-  const box=document.getElementById("clas-content");
-  fetch("./clasificacion.json?_="+Date.now())
-    .then(r=>{if(!r.ok)throw 0;return r.json();})
-    .then(data=>renderClasificacion(data,box))
-    .catch(()=>{
-      box.innerHTML='<div class="loading-msg"><b style="font-size:16px">🏆 Clasificación</b><br><br>'
-        +'La clasificación se actualizará aquí cuando se publiquen los resultados.<br>'
-        +'<span style="font-size:11px;color:var(--muted2)">Generada con calcular_porra.py → clasificacion.json</span></div>';
-    });
-}
-function renderClasificacion(data,box){
-  if(!data||!data.length){box.innerHTML='<div class="loading-msg">Sin datos aún.</div>';return;}
-  const leader=data[0].puntos||0;
-  let html='<table class="clas-table"><thead><tr><th style="width:36px">#</th><th>Participante</th>'
-    +'<th style="text-align:right">Pts</th><th style="text-align:right">Exactos</th><th style="text-align:right">Signos</th></tr></thead><tbody>';
-  data.forEach((p,i)=>{
-    const pos=i+1,pc=pos===1?" p1":pos===2?" p2":pos===3?" p3":"";
-    const gap=pos>1?'<div style="font-size:11px;color:var(--hot)">–'+(leader-(p.puntos||0))+' del líder</div>':"";
-    html+='<tr><td class="clas-pos'+pc+'">'+pos+'</td>'
-      +'<td><div class="clas-name">'+(p.nombre||p.name||"?")+'</div>'+gap+'</td>'
-      +'<td class="clas-pts">'+(p.puntos||0)+'</td>'
-      +'<td class="clas-num">'+(p.exactos||0)+'</td>'
-      +'<td class="clas-num">'+(p.signos||0)+'</td></tr>';
-  });
-  html+='</tbody></table><p style="font-size:11px;color:var(--muted2);margin-top:10px;text-align:right">Incluye fase de grupos. Eliminatorias pendientes.</p>';
-  box.innerHTML=html;
-}
 
 /* ─── reset all ─── */
 function resetAll(){
