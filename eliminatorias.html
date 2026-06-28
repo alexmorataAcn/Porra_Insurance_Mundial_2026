@@ -321,6 +321,7 @@ function autoGan(mid){
   const h=sc.h===""?null:Number(sc.h),a=sc.a===""?null:Number(sc.a);
   if(h===null||a===null){sc.gan="";}
   else if(h!==a){sc.gan=h>a?"local":"visitante";}
+  else{sc.gan="";}  // empate: resetear para que el usuario elija penalti desde cero
 }
 
 /* ─── build team picker select ─── */
